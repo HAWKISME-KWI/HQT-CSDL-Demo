@@ -1,0 +1,20 @@
+# --- Cấu hình bảo mật ---
+.env
+
+# --- Môi trường ảo (Virtual Environment) ---
+venv/
+env/
+ENV/
+.venv/
+
+# --- File hệ thống / IDE ---
+.DS_Store          # MacOS
+__pycache__/       # File cache Python
+*.py[cod]          # Bytecode Python
+*$py.class
+
+# --- File rác khác ---
+.idea/             # Cấu hình PyCharm
+.vscode/           # Cấu hình VS Code
+*.log              # Các file log
+.tmp/              # File tạm
