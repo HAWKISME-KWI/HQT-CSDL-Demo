@@ -1,10 +1,26 @@
 DROP FUNCTION IF EXISTS fn_calculate_booking_cost(UUID, TIMESTAMPTZ, TIMESTAMPTZ);
 DROP FUNCTION IF EXISTS fn_is_court_available(UUID, TIMESTAMPTZ, TIMESTAMPTZ);
+DROP FUNCTION IF EXISTS fn_search_bookings(UUID, TIMESTAMPTZ, TIMESTAMPTZ, booking_status, UUID, UUID);
 DROP FUNCTION IF EXISTS fn_search_bookings(UUID, TIMESTAMPTZ, TIMESTAMPTZ, booking_status, UUID);
+DROP FUNCTION IF EXISTS fn_search_bookings(UUID, TIMESTAMPTZ, TIMESTAMPTZ, booking_status);
+DROP FUNCTION IF EXISTS fn_search_bookings(UUID, TIMESTAMPTZ, TIMESTAMPTZ);
+DROP FUNCTION IF EXISTS fn_search_bookings(UUID, TIMESTAMPTZ);
+DROP FUNCTION IF EXISTS fn_search_bookings(UUID);
+DROP FUNCTION IF EXISTS fn_search_bookings();
 DROP FUNCTION IF EXISTS fn_filter_courts(court_surfaces, court_sizes, DECIMAL, DECIMAL, BOOLEAN);
+DROP FUNCTION IF EXISTS fn_filter_courts(court_surfaces, court_sizes, DECIMAL, DECIMAL);
+DROP FUNCTION IF EXISTS fn_filter_courts(court_surfaces, court_sizes, DECIMAL);
+DROP FUNCTION IF EXISTS fn_filter_courts(court_surfaces, court_sizes);
+DROP FUNCTION IF EXISTS fn_filter_courts(court_surfaces);
+DROP FUNCTION IF EXISTS fn_filter_courts();
 DROP FUNCTION IF EXISTS fn_get_court_schedule(UUID, DATE);
+DROP FUNCTION IF EXISTS fn_daily_revenue(DATE, DATE, UUID);
 DROP FUNCTION IF EXISTS fn_daily_revenue(DATE, DATE);
+DROP FUNCTION IF EXISTS fn_daily_revenue(DATE);
+DROP FUNCTION IF EXISTS fn_daily_revenue();
+DROP FUNCTION IF EXISTS fn_top_courts(INT, UUID);
 DROP FUNCTION IF EXISTS fn_top_courts(INT);
+DROP FUNCTION IF EXISTS fn_top_courts();
 DROP FUNCTION IF EXISTS sp_approve_booking(UUID, UUID);
 DROP FUNCTION IF EXISTS sp_reject_booking(UUID, UUID);
 DROP FUNCTION IF EXISTS sp_book_court(UUID, UUID, TIMESTAMPTZ, TIMESTAMPTZ);
@@ -15,6 +31,7 @@ DROP FUNCTION IF EXISTS sp_add_court(VARCHAR, TEXT, court_surfaces, court_sizes,
 DROP FUNCTION IF EXISTS sp_update_court(UUID, VARCHAR, TEXT, court_surfaces, court_sizes, DECIMAL, DECIMAL, BOOLEAN, TEXT, UUID);
 DROP FUNCTION IF EXISTS sp_delete_court(UUID, UUID);
 
+-- Hàm tính chi phí
 CREATE OR REPLACE FUNCTION fn_calculate_booking_cost(
     p_court_id UUID,
     p_start_time TIMESTAMPTZ,
@@ -39,6 +56,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Hàm kiểm tra sân trống
 CREATE OR REPLACE FUNCTION fn_is_court_available(
     p_court_id UUID,
     p_start TIMESTAMPTZ,
@@ -55,12 +73,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Hàm tìm kiếm booking 
 CREATE OR REPLACE FUNCTION fn_search_bookings(
     p_user_id UUID DEFAULT NULL,
     p_from_date TIMESTAMPTZ DEFAULT NULL,
     p_to_date TIMESTAMPTZ DEFAULT NULL,
     p_status booking_status DEFAULT NULL,
-    p_court_id UUID DEFAULT NULL
+    p_court_id UUID DEFAULT NULL,
+    p_owner_id UUID DEFAULT NULL
 )
 RETURNS TABLE(
     booking_id UUID,
@@ -91,10 +111,12 @@ BEGIN
         AND (p_to_date IS NULL OR b.end_time <= p_to_date)
         AND (p_status IS NULL OR b.status = p_status)
         AND (p_court_id IS NULL OR b.court_id = p_court_id)
+        AND (p_owner_id IS NULL OR c.owner_id = p_owner_id)
     ORDER BY b.start_time DESC;
 END;
 $$ LANGUAGE plpgsql;
 
+-- Hàm lọc sân (chỉ 5 tham số)
 CREATE OR REPLACE FUNCTION fn_filter_courts(
     p_surface court_surfaces DEFAULT NULL,
     p_size court_sizes DEFAULT NULL,
@@ -157,7 +179,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Lấy lịch của sân trong ngày
+-- Hàm lấy lịch sân
 CREATE OR REPLACE FUNCTION fn_get_court_schedule(p_court_id UUID, p_date DATE)
 RETURNS TABLE(start_time TIMESTAMPTZ, end_time TIMESTAMPTZ, status booking_status) AS $$
 BEGIN
@@ -171,24 +193,33 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Thống kê doanh thu theo ngày
-CREATE OR REPLACE FUNCTION fn_daily_revenue(from_date DATE DEFAULT NULL, to_date DATE DEFAULT NULL)
+-- Hàm doanh thu theo ngày (3 tham số)
+CREATE OR REPLACE FUNCTION fn_daily_revenue(
+    from_date DATE DEFAULT NULL,
+    to_date DATE DEFAULT NULL,
+    p_owner_id UUID DEFAULT NULL
+)
 RETURNS TABLE(booking_date DATE, revenue DECIMAL) AS $$
 BEGIN
     RETURN QUERY
     SELECT DATE(b.start_time) AS booking_date,
            COALESCE(SUM(fn_calculate_booking_cost(b.court_id, b.start_time, b.end_time)), 0) AS revenue
     FROM bookings b
+    JOIN courts c ON b.court_id = c.court_id
     WHERE b.status = 'COMPLETED'
       AND (from_date IS NULL OR DATE(b.start_time) >= from_date)
       AND (to_date IS NULL OR DATE(b.start_time) <= to_date)
+      AND (p_owner_id IS NULL OR c.owner_id = p_owner_id)
     GROUP BY DATE(b.start_time)
     ORDER BY booking_date DESC;
 END;
 $$ LANGUAGE plpgsql;
 
--- Top sân được đặt nhiều nhất (thêm owner phone)
-CREATE OR REPLACE FUNCTION fn_top_courts(limit_count INT DEFAULT 10)
+-- Hàm top sân (2 tham số)
+CREATE OR REPLACE FUNCTION fn_top_courts(
+    limit_count INT DEFAULT 10,
+    p_owner_id UUID DEFAULT NULL
+)
 RETURNS TABLE(court_id UUID, court_name VARCHAR, address TEXT, owner_phone VARCHAR, total_bookings BIGINT) AS $$
 BEGIN
     RETURN QUERY
@@ -196,13 +227,13 @@ BEGIN
     FROM courts c
     LEFT JOIN users u ON c.owner_id = u.user_id
     LEFT JOIN bookings b ON c.court_id = b.court_id AND b.status = 'COMPLETED'
+    WHERE (p_owner_id IS NULL OR c.owner_id = p_owner_id)
     GROUP BY c.court_id, c.court_name, c.address, u.phone_number
     ORDER BY total_bookings DESC
     LIMIT limit_count;
 END;
 $$ LANGUAGE plpgsql;
 
--- Các stored procedure (không thay đổi so với trước, chỉ giữ nguyên)
 CREATE OR REPLACE FUNCTION sp_book_court(
     p_user_id UUID,
     p_court_id UUID,
