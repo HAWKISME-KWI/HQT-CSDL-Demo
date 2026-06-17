@@ -196,12 +196,8 @@ def get_available_courts():
     except Exception as e:
         return {"error": str(e)}
 
-def get_booking_history():
-    try:
-        response = supabase.table("view_booking_history").select("*").execute()
-        return {"success": True, "data": response.data}
-    except Exception as e:
-        return {"error": str(e)}
+def get_booking_history(user_id):
+    return search_bookings(user_id=user_id)
 
 def get_admin_dashboard_stats():
     try:
@@ -210,12 +206,8 @@ def get_admin_dashboard_stats():
     except Exception as e:
         return {"error": str(e)}
 
-def get_all_bookings():
-    try:
-        response = supabase.table("view_all_bookings").select("*").execute()
-        return {"success": True, "data": response.data}
-    except Exception as e:
-        return {"error": str(e)}
+def get_all_bookings(owner_id=None):
+    return search_bookings(owner_id=owner_id)
 
 def calculate_cost(court_id, start_time, end_time):
     try:
@@ -228,13 +220,16 @@ def calculate_cost(court_id, start_time, end_time):
     except Exception as e:
         return {"error": str(e)}
 
-def search_bookings(user_id=None, from_date=None, to_date=None, status=None, court_id=None):
-    params = {}
-    if user_id is not None: params["p_user_id"] = user_id
-    if from_date: params["p_from_date"] = from_date.isoformat() if isinstance(from_date, datetime.datetime) else from_date
-    if to_date: params["p_to_date"] = to_date.isoformat() if isinstance(to_date, datetime.datetime) else to_date
-    if status: params["p_status"] = status
-    if court_id: params["p_court_id"] = court_id
+def search_bookings(user_id=None, from_date=None, to_date=None, status=None, court_id=None, owner_id=None):
+    params = {
+        "p_user_id": user_id,
+        "p_from_date": from_date.isoformat() if isinstance(from_date, datetime.datetime) else from_date,
+        "p_to_date": to_date.isoformat() if isinstance(to_date, datetime.datetime) else to_date,
+        "p_status": status,
+        "p_court_id": court_id,
+        "p_owner_id": owner_id
+    }
+    params = {k: v for k, v in params.items() if v is not None}
     try:
         response = supabase.rpc("fn_search_bookings", params).execute()
         return {"success": True, "data": response.data}
@@ -256,7 +251,6 @@ def filter_courts(surface=None, size=None, min_price=None, max_price=None, is_fr
 
 def get_court_by_id(court_id):
     try:
-        # Lấy thông tin sân
         court_res = supabase.table("courts").select("*").eq("court_id", court_id).execute()
         if not court_res.data:
             return {"error": "Court not found"}
@@ -284,19 +278,22 @@ def get_court_schedule(court_id, date):
     except Exception as e:
         return {"error": str(e)}
 
-def get_daily_revenue(from_date=None, to_date=None):
+def get_daily_revenue(from_date=None, to_date=None, owner_id=None):
     params = {}
     if from_date: params["from_date"] = from_date.isoformat() if isinstance(from_date, datetime.date) else from_date
     if to_date: params["to_date"] = to_date.isoformat() if isinstance(to_date, datetime.date) else to_date
+    if owner_id: params["p_owner_id"] = owner_id
     try:
         response = supabase.rpc("fn_daily_revenue", params).execute()
         return {"success": True, "data": response.data}
     except Exception as e:
         return {"error": str(e)}
 
-def get_top_courts(limit=10):
+def get_top_courts(limit=10, owner_id=None):
+    params = {"limit_count": limit}
+    if owner_id: params["p_owner_id"] = owner_id
     try:
-        response = supabase.rpc("fn_top_courts", {"limit_count": limit}).execute()
+        response = supabase.rpc("fn_top_courts", params).execute()
         return {"success": True, "data": response.data}
     except Exception as e:
         return {"error": str(e)}

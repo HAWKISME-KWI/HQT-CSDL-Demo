@@ -14,9 +14,8 @@ from src.service import db_service
 def format_datetime(dt_str):
     if dt_str:
         try:
-            # Giả sử chuỗi đến là UTC, hiển thị dạng địa phương (cộng 7h)
             dt = datetime.datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
-            dt_local = dt + datetime.timedelta(hours=7)  # Chuyển sang giờ Việt Nam
+            dt_local = dt + datetime.timedelta(hours=7)
             return dt_local.strftime("%d/%m/%Y %H:%M")
         except:
             return dt_str
@@ -190,7 +189,6 @@ class CourtManagerApp:
         right_frame = tk.Frame(main_pane)
         main_pane.add(right_frame, width=550)
 
-        # Chi tiết sân
         detail_frame = tk.Frame(right_frame)
         detail_frame.pack(fill=tk.X, pady=5)
         self.court_image_label = tk.Label(detail_frame, text="Chọn sân để xem ảnh", bg="#f0f0f0", width=30, height=10)
@@ -213,7 +211,6 @@ class CourtManagerApp:
         self.court_free_label = tk.Label(info_frame, text="Trạng thái: ", foreground="green")
         self.court_free_label.pack(anchor=tk.W)
 
-        # Lịch sân
         tk.Label(right_frame, text="Lịch sân trong ngày:", font=("Arial", 10, "bold")).pack(anchor=tk.W, pady=(10,0))
         date_frame = tk.Frame(right_frame)
         date_frame.pack(anchor=tk.W, pady=2)
@@ -229,7 +226,6 @@ class CourtManagerApp:
         self.schedule_tree.heading("status", text="Trạng thái")
         self.schedule_tree.pack(fill=tk.X, pady=5)
 
-        # Form đặt sân - dùng Combobox chọn giờ
         book_frame = tk.LabelFrame(right_frame, text="Đặt sân", padx=5, pady=5)
         book_frame.pack(fill=tk.X, pady=10)
 
@@ -382,7 +378,6 @@ class CourtManagerApp:
             messagebox.showerror("Lỗi", "Giờ không hợp lệ")
             return None, None
 
-        # Tạo datetime local (giả sử múi giờ Việt Nam UTC+7)
         start_dt = datetime.datetime.combine(date_obj, datetime.time(start_h, start_m))
         end_dt = datetime.datetime.combine(date_obj, datetime.time(end_h, end_m))
         return start_dt, end_dt
@@ -398,7 +393,6 @@ class CourtManagerApp:
             messagebox.showerror("Lỗi", "Thời gian kết thúc phải sau bắt đầu")
             return
 
-        # Chuyển sang UTC (trừ đi 7 giờ)
         start_utc = (start_dt - datetime.timedelta(hours=7)).isoformat() + 'Z'
         end_utc = (end_dt - datetime.timedelta(hours=7)).isoformat() + 'Z'
         res = db_service.calculate_cost(self.selected_court_id, start_utc, end_utc)
@@ -421,7 +415,6 @@ class CourtManagerApp:
             messagebox.showerror("Lỗi", "Không thể đặt trong quá khứ")
             return
 
-        # Chuyển sang UTC (trừ đi 7 giờ)
         start_utc = (start_dt - datetime.timedelta(hours=7)).isoformat() + 'Z'
         end_utc = (end_dt - datetime.timedelta(hours=7)).isoformat() + 'Z'
 
@@ -459,7 +452,10 @@ class CourtManagerApp:
     def load_my_bookings(self):
         def fetch():
             res = db_service.search_bookings(user_id=self.current_user['user_id'])
-            self.root.after(0, self.update_my_bookings, res)
+            if "error" in res:
+                self.root.after(0, lambda: messagebox.showerror("Lỗi", res["error"]))
+            else:
+                self.root.after(0, self.update_my_bookings, res)
         threading.Thread(target=fetch, daemon=True).start()
 
     def update_my_bookings(self, result):
@@ -682,8 +678,14 @@ class CourtManagerApp:
     def load_manage_bookings(self):
         def fetch():
             status = self.filter_booking_status.get() if self.filter_booking_status.get() else None
-            res = db_service.search_bookings(status=status)
-            self.root.after(0, self.update_manage_bookings, res)
+            owner_id = None
+            if self.current_user['role'] == 'COURT_MANAGER':
+                owner_id = self.current_user['user_id']
+            res = db_service.search_bookings(status=status, owner_id=owner_id)
+            if "error" in res:
+                self.root.after(0, lambda: messagebox.showerror("Lỗi", res["error"]))
+            else:
+                self.root.after(0, self.update_manage_bookings, res)
         threading.Thread(target=fetch, daemon=True).start()
 
     def update_manage_bookings(self, result):
@@ -799,8 +801,11 @@ class CourtManagerApp:
 
     def load_stats(self):
         def fetch():
-            rev_res = db_service.get_daily_revenue()
-            top_res = db_service.get_top_courts(5)
+            owner_id = None
+            if self.current_user['role'] == 'COURT_MANAGER':
+                owner_id = self.current_user['user_id']
+            rev_res = db_service.get_daily_revenue(owner_id=owner_id)
+            top_res = db_service.get_top_courts(5, owner_id=owner_id)
             self.root.after(0, self.update_stats, rev_res, top_res)
         threading.Thread(target=fetch, daemon=True).start()
 
@@ -850,7 +855,10 @@ class CourtManagerApp:
     def load_notifications(self):
         def fetch():
             res = db_service.get_notifications(self.current_user['user_id'])
-            self.root.after(0, self.update_notifications, res)
+            if "error" in res:
+                self.root.after(0, lambda: messagebox.showerror("Lỗi", res["error"]))
+            else:
+                self.root.after(0, self.update_notifications, res)
         threading.Thread(target=fetch, daemon=True).start()
 
     def update_notifications(self, result):
