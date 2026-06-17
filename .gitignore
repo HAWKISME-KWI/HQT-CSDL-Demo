@@ -18,3 +18,7 @@ __pycache__/       # File cache Python
 .vscode/           # Cấu hình VS Code
 *.log              # Các file log
 .tmp/              # File tạm
+__pycache__/
+*.pyc
+.env
+venv/
