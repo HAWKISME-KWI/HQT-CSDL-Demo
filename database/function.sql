@@ -1,3 +1,4 @@
+-- Xóa tất cả các phiên bản cũ của các hàm
 DROP FUNCTION IF EXISTS fn_calculate_booking_cost(UUID, TIMESTAMPTZ, TIMESTAMPTZ);
 DROP FUNCTION IF EXISTS fn_is_court_available(UUID, TIMESTAMPTZ, TIMESTAMPTZ);
 DROP FUNCTION IF EXISTS fn_search_bookings(UUID, TIMESTAMPTZ, TIMESTAMPTZ, booking_status, UUID, UUID);
@@ -42,20 +43,27 @@ DECLARE
     v_price_per_hour DECIMAL;
     v_price_per_3h DECIMAL;
     v_hours NUMERIC;
+    v_full_blocks INT;
+    v_remaining_hours NUMERIC;
     v_cost DECIMAL;
 BEGIN
-    SELECT price_per_hour, price_per_three_hours INTO v_price_per_hour, v_price_per_3h
-    FROM courts WHERE court_id = p_court_id;
+    SELECT price_per_hour, price_per_three_hours
+    INTO v_price_per_hour, v_price_per_3h
+    FROM courts
+    WHERE court_id = p_court_id;
+
     v_hours := EXTRACT(EPOCH FROM (p_end_time - p_start_time)) / 3600;
-    IF v_hours >= 3 THEN
-        v_cost := v_price_per_3h * CEIL(v_hours / 3);
-    ELSE
-        v_cost := v_price_per_hour * v_hours;
-    END IF;
+
+    v_full_blocks := FLOOR(v_hours / 3);
+    v_remaining_hours := MOD(v_hours, 3);
+
+    v_cost :=
+        (v_full_blocks * v_price_per_3h)
+        + (v_remaining_hours * v_price_per_hour);
+
     RETURN v_cost;
 END;
 $$ LANGUAGE plpgsql;
-
 -- Hàm kiểm tra sân trống
 CREATE OR REPLACE FUNCTION fn_is_court_available(
     p_court_id UUID,
@@ -73,7 +81,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Hàm tìm kiếm booking 
+-- Hàm tìm kiếm booking (chỉ 6 tham số, tất cả đều có giá trị mặc định NULL)
 CREATE OR REPLACE FUNCTION fn_search_bookings(
     p_user_id UUID DEFAULT NULL,
     p_from_date TIMESTAMPTZ DEFAULT NULL,
@@ -234,6 +242,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Các stored procedure giữ nguyên
 CREATE OR REPLACE FUNCTION sp_book_court(
     p_user_id UUID,
     p_court_id UUID,
