@@ -1,3 +1,4 @@
+
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
@@ -24,8 +25,64 @@ def format_datetime(dt_str):
 class CourtManagerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Quản lý Sân bóng")
+        self.root.title("Quản lý Sân cầu lông")
         self.root.geometry("1400x800")
+        
+                        # --- UI Styling Setup ---
+        style = ttk.Style()
+        style.theme_use('clam')
+        
+        # Configure global background
+        self.root.configure(bg='#F4FDF4')
+        
+        # Configure default font for all ttk widgets
+        default_font = ('Segoe UI', 10)
+        
+        # Global Light Green & Black Borders styling
+        style.configure('.', font=default_font, background='#F4FDF4', foreground='#000000', bordercolor='#000000')
+        style.configure('TFrame', background='#F4FDF4')
+        style.configure('TNotebook', background='#F4FDF4')
+        style.configure('TNotebook.Tab', background='#E8F5E9', padding=[10, 5], bordercolor='#000000')
+        style.map('TNotebook.Tab', background=[('selected', '#FFFFFF')], foreground=[('selected', '#28a745')])
+        
+        style.configure('TLabel', font=default_font, background='#F4FDF4')
+        style.configure('TLabelFrame', background='#F4FDF4', bordercolor='#000000')
+        style.configure('TLabelframe.Label', background='#F4FDF4', font=('Segoe UI', 10, 'bold'), foreground='#28a745')
+        
+        # Button styling (Default Blue)
+        style.configure('TButton', font=('Segoe UI', 10, 'bold'), background='#007BFF', foreground='#FFFFFF', padding=5, bordercolor='#000000')
+        style.map('TButton', background=[('active', '#0056b3')], foreground=[('active', '#FFFFFF')])
+        
+        # Treeview Styling
+        style.configure('Treeview.Heading', font=('Segoe UI', 10, 'bold'), background='#E8F5E9', foreground='#000000', bordercolor='#000000')
+        style.configure('Treeview', rowheight=25, background='#FFFFFF', fieldbackground='#FFFFFF', bordercolor='#000000')
+        style.map('Treeview', background=[('selected', '#d4edda')], foreground=[('selected', '#155724')])
+        
+        # Custom styles for specific elements
+        style.configure('Header.TLabel', font=('Segoe UI', 20, 'bold'), foreground='#28a745', background='#F4FDF4')
+        style.configure('SubHeader.TLabel', font=('Segoe UI', 14, 'bold'), foreground='#28a745', background='#F4FDF4')
+        
+        # Success Button (Green)
+        style.configure('Success.TButton', background='#28a745', foreground='#FFFFFF')
+        style.map('Success.TButton', background=[('active', '#218838')])
+        
+        # Danger Button (Red)
+        style.configure('Danger.TButton', background='#dc3545', foreground='#FFFFFF')
+        style.map('Danger.TButton', background=[('active', '#c82333')])
+        
+        # Warning Button (Orange)
+        style.configure('Warning.TButton', background='#fd7e14', foreground='#FFFFFF')
+        style.map('Warning.TButton', background=[('active', '#e8590c')])
+        
+        # Info Button (Cyan/Teal)
+        style.configure('Info.TButton', background='#17a2b8', foreground='#FFFFFF')
+        style.map('Info.TButton', background=[('active', '#138496')])
+
+        style.configure('StatusFree.TLabel', foreground='#28a745', background='#F4FDF4')
+        style.configure('StatusBusy.TLabel', foreground='#dc3545', background='#F4FDF4')
+        style.configure('Cost.TLabel', foreground='#fd7e14', font=('Segoe UI', 12, 'bold'), background='#F4FDF4')
+        # ------------------------
+
         self.current_user = None
 
         self.court_id_map = {}
@@ -38,47 +95,59 @@ class CourtManagerApp:
         self.selected_date = None
         self.notebook = None
 
-        self.login_frame = tk.Frame(self.root)
-        self.login_frame.pack(fill=tk.BOTH, expand=True)
+        self.login_frame = ttk.Frame(self.root)
+        self.login_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
         self.build_login_frame()
 
     # ================== LOGIN / REGISTER ==================
     def build_login_frame(self):
         for widget in self.login_frame.winfo_children():
             widget.destroy()
-        tk.Label(self.login_frame, text="ĐĂNG NHẬP", font=("Arial", 20, "bold")).pack(pady=20)
-        tk.Label(self.login_frame, text="Tên đăng nhập:").pack()
-        self.entry_username = tk.Entry(self.login_frame, width=30)
-        self.entry_username.pack(pady=5)
-        tk.Label(self.login_frame, text="Mật khẩu:").pack()
-        self.entry_password = tk.Entry(self.login_frame, show="*", width=30)
-        self.entry_password.pack(pady=5)
-        btn_frame = tk.Frame(self.login_frame)
-        btn_frame.pack(pady=10)
-        tk.Button(btn_frame, text="Đăng nhập", command=self.do_login, width=15).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="Đăng ký", command=self.show_register, width=15).pack(side=tk.LEFT, padx=5)
+            
+        # Center card
+        card = ttk.Frame(self.login_frame, padding=40)
+        card.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        ttk.Label(card, text="🏸 Quản lý Sân cầu lông", style="Header.TLabel").pack(pady=(0, 20))
+        
+        ttk.Label(card, text="Tên đăng nhập:", font=("Segoe UI", 10)).pack(anchor=tk.W)
+        self.entry_username = ttk.Entry(card, width=35, font=("Segoe UI", 11))
+        self.entry_username.pack(pady=(5, 15))
+        
+        ttk.Label(card, text="Mật khẩu:", font=("Segoe UI", 10)).pack(anchor=tk.W)
+        self.entry_password = ttk.Entry(card, show="*", width=35, font=("Segoe UI", 11))
+        self.entry_password.pack(pady=(5, 20))
+        
+        btn_frame = ttk.Frame(card)
+        btn_frame.pack(fill=tk.X)
+        ttk.Button(btn_frame, text="Đăng nhập", style="Success.TButton", command=self.do_login).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 5))
+        ttk.Button(btn_frame, text="Đăng ký", style="Info.TButton", command=self.show_register).pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 0))
 
     def show_register(self):
         reg_win = tk.Toplevel(self.root)
-        reg_win.title("Đăng ký")
-        reg_win.geometry("400x450")
-        tk.Label(reg_win, text="ĐĂNG KÝ", font=("Arial", 16, "bold")).pack(pady=10)
+        reg_win.title("Đăng ký thành viên")
+        reg_win.geometry("450x550")
+        
+        card = ttk.Frame(reg_win, padding=30)
+        card.pack(expand=True, fill=tk.BOTH)
+        
+        ttk.Label(card, text="TẠO TÀI KHOẢN", style="Header.TLabel").pack(pady=(0, 20))
 
-        tk.Label(reg_win, text="Tên đăng nhập:").pack()
-        entry_user = tk.Entry(reg_win, width=30)
-        entry_user.pack(pady=5)
+        ttk.Label(card, text="Tên đăng nhập:", font=("Segoe UI", 10)).pack(anchor=tk.W)
+        entry_user = ttk.Entry(card, width=40, font=("Segoe UI", 11))
+        entry_user.pack(pady=(5, 15))
 
-        tk.Label(reg_win, text="Mật khẩu:").pack()
-        entry_pass = tk.Entry(reg_win, show="*", width=30)
-        entry_pass.pack(pady=5)
+        ttk.Label(card, text="Mật khẩu:", font=("Segoe UI", 10)).pack(anchor=tk.W)
+        entry_pass = ttk.Entry(card, show="*", width=40, font=("Segoe UI", 11))
+        entry_pass.pack(pady=(5, 15))
 
-        tk.Label(reg_win, text="Số điện thoại:").pack()
-        entry_phone = tk.Entry(reg_win, width=30)
-        entry_phone.pack(pady=5)
+        ttk.Label(card, text="Số điện thoại:", font=("Segoe UI", 10)).pack(anchor=tk.W)
+        entry_phone = ttk.Entry(card, width=40, font=("Segoe UI", 11))
+        entry_phone.pack(pady=(5, 15))
 
-        tk.Label(reg_win, text="Vai trò:").pack()
+        ttk.Label(card, text="Vai trò:", font=("Segoe UI", 10)).pack(anchor=tk.W)
         role_var = tk.StringVar(value="CUSTOMER")
-        ttk.Combobox(reg_win, textvariable=role_var, values=["CUSTOMER", "COURT_MANAGER"]).pack(pady=5)
+        ttk.Combobox(card, textvariable=role_var, values=["CUSTOMER", "COURT_MANAGER"], font=("Segoe UI", 11), state="readonly").pack(pady=(5, 25), fill=tk.X)
 
         def do_register():
             username = entry_user.get().strip()
@@ -95,7 +164,7 @@ class CourtManagerApp:
                 messagebox.showinfo("Thành công", "Đăng ký thành công! Vui lòng đăng nhập.")
                 reg_win.destroy()
 
-        tk.Button(reg_win, text="Đăng ký", command=do_register, width=20).pack(pady=20)
+        ttk.Button(card, text="Đăng ký ngay", style="Success.TButton", command=do_register).pack(fill=tk.X, pady=10)
 
     def do_login(self):
         username = self.entry_username.get().strip()
@@ -113,145 +182,153 @@ class CourtManagerApp:
 
     # ================== MAIN APP ==================
     def build_main_app(self):
-        self.main_frame = tk.Frame(self.root)
+        self.main_frame = ttk.Frame(self.root)
         self.main_frame.pack(fill=tk.BOTH, expand=True)
 
-        toolbar = tk.Frame(self.main_frame)
+        toolbar = ttk.Frame(self.main_frame)
         toolbar.pack(fill=tk.X, pady=5, padx=10)
-        tk.Label(toolbar, text=f"👤 {self.current_user['username']} ({self.current_user['role']})").pack(side=tk.LEFT)
-        tk.Button(toolbar, text="Đăng xuất", command=self.logout).pack(side=tk.RIGHT)
+        ttk.Label(toolbar, text=f"👤 {self.current_user['username']} ({self.current_user['role']})").pack(side=tk.LEFT)
+        ttk.Button(toolbar, text="Đăng xuất", command=self.logout).pack(side=tk.RIGHT)
 
         self.notebook = ttk.Notebook(self.main_frame)
-        self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        self.notebook.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
 
-        self.tab_courts = tk.Frame(self.notebook)
+        self.tab_courts = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_courts, text="🏸 Sân")
         self.build_courts_tab()
 
-        self.tab_my_bookings = tk.Frame(self.notebook)
+        self.tab_my_bookings = ttk.Frame(self.notebook)
         self.notebook.add(self.tab_my_bookings, text="📋 Lịch của tôi")
         self.build_my_bookings_tab()
 
         if self.current_user['role'] in ('MANAGER', 'COURT_MANAGER'):
-            self.tab_manage = tk.Frame(self.notebook)
+            self.tab_manage = ttk.Frame(self.notebook)
             self.notebook.add(self.tab_manage, text="⚙️ Quản lý")
             self.build_manage_tab()
 
-            self.tab_stats = tk.Frame(self.notebook)
+            self.tab_stats = ttk.Frame(self.notebook)
             self.notebook.add(self.tab_stats, text="📊 Thống kê")
             self.build_stats_tab()
 
-        self.tab_notifications = tk.Frame(self.notebook)
-        self.notebook.add(self.tab_notifications, text="🔔 Thông báo")
-        self.build_notifications_tab()
+
 
         self.load_courts()
 
     # ================== TAB 1: SÂN ==================
     def build_courts_tab(self):
-        main_pane = tk.PanedWindow(self.tab_courts, orient=tk.HORIZONTAL, sashrelief=tk.RAISED, sashwidth=4)
-        main_pane.pack(fill=tk.BOTH, expand=True)
+        # Vertical split: Top = List, Bottom = Details + Booking
+        main_pane = ttk.PanedWindow(self.tab_courts, orient='vertical')
+        main_pane.pack(fill='both', expand=True, padx=10, pady=10)
 
-        left_frame = tk.Frame(main_pane)
-        main_pane.add(left_frame, width=400)
+        # TOP FRAME (Filter + Treeview)
+        top_frame = ttk.Frame(main_pane)
+        main_pane.add(top_frame, weight=1)
 
-        filter_frame = tk.Frame(left_frame)
-        filter_frame.pack(fill=tk.X, pady=5)
-        tk.Label(filter_frame, text="Mặt sân:").pack(side=tk.LEFT, padx=2)
+        filter_frame = ttk.Frame(top_frame)
+        filter_frame.pack(fill='x', pady=5)
+        ttk.Label(filter_frame, text="Mặt sân:").pack(side='left', padx=2)
         self.filter_surface = ttk.Combobox(filter_frame, values=["", "PVC", "WOOD", "CEMENT", "SYNTHETIC_RESIN"], width=12)
-        self.filter_surface.pack(side=tk.LEFT, padx=2)
-        tk.Label(filter_frame, text="Kích thước:").pack(side=tk.LEFT, padx=2)
+        self.filter_surface.pack(side='left', padx=2)
+        ttk.Label(filter_frame, text="Kích thước:").pack(side='left', padx=2)
         self.filter_size = ttk.Combobox(filter_frame, values=["", "SINGLE", "DOUBLE"], width=8)
-        self.filter_size.pack(side=tk.LEFT, padx=2)
-        tk.Button(filter_frame, text="Lọc", command=self.load_courts).pack(side=tk.LEFT, padx=5)
+        self.filter_size.pack(side='left', padx=2)
+        ttk.Button(filter_frame, text="Lọc", style="Info.TButton", command=self.load_courts).pack(side='left', padx=10)
 
-        tree_frame = tk.Frame(left_frame)
-        tree_frame.pack(fill=tk.BOTH, expand=True)
-        self.tree_courts = ttk.Treeview(tree_frame, columns=("id", "name", "address", "surface", "size", "price"), show="headings", height=20)
+        tree_frame = ttk.Frame(top_frame)
+        tree_frame.pack(fill='both', expand=True)
+        self.tree_courts = ttk.Treeview(tree_frame, columns=("id", "name", "address", "surface", "size", "price"), show="headings", height=5)
         self.tree_courts.heading("id", text="ID")
         self.tree_courts.heading("name", text="Tên sân")
         self.tree_courts.heading("address", text="Địa chỉ")
-        self.tree_courts.heading("surface", text="Mặt")
+        self.tree_courts.heading("surface", text="Mặt sân")
         self.tree_courts.heading("size", text="Kích thước")
         self.tree_courts.heading("price", text="Giá/h")
         self.tree_courts.column("id", width=80)
-        self.tree_courts.column("name", width=150)
-        self.tree_courts.column("address", width=200)
-        self.tree_courts.column("surface", width=100)
+        self.tree_courts.column("name", width=200)
+        self.tree_courts.column("address", width=300)
+        self.tree_courts.column("surface", width=150)
         self.tree_courts.column("size", width=100)
-        self.tree_courts.column("price", width=80)
-        scrollbar = ttk.Scrollbar(tree_frame, orient=tk.VERTICAL, command=self.tree_courts.yview)
-        self.tree_courts.configure(yscrollcommand=scrollbar.set)
-        self.tree_courts.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.tree_courts.column("price", width=100)
+        scrollbar_y = ttk.Scrollbar(tree_frame, orient='vertical', command=self.tree_courts.yview)
+        self.tree_courts.configure(yscrollcommand=scrollbar_y.set)
+        self.tree_courts.pack(side='left', fill='both', expand=True)
+        scrollbar_y.pack(side='right', fill='y')
         self.tree_courts.bind("<<TreeviewSelect>>", self.on_court_selected)
 
-        right_frame = tk.Frame(main_pane)
-        main_pane.add(right_frame, width=550)
+        # BOTTOM FRAME (Left: Details, Right: Booking)
+        bottom_frame = ttk.Frame(main_pane)
+        main_pane.add(bottom_frame, weight=1)
 
-        detail_frame = tk.Frame(right_frame)
-        detail_frame.pack(fill=tk.X, pady=5)
-        self.court_image_label = tk.Label(detail_frame, text="Chọn sân để xem ảnh", bg="#f0f0f0", width=30, height=10)
-        self.court_image_label.pack(side=tk.LEFT, padx=5)
+        # Left split for details
+        detail_frame = ttk.Frame(bottom_frame)
+        detail_frame.pack(side='left', fill='both', expand=True, padx=(0, 10))
 
-        info_frame = tk.Frame(detail_frame)
-        info_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=10)
-        self.court_name_label = tk.Label(info_frame, text="Tên: ", font=("Arial", 12, "bold"))
-        self.court_name_label.pack(anchor=tk.W)
-        self.court_address_label = tk.Label(info_frame, text="Địa chỉ: ")
-        self.court_address_label.pack(anchor=tk.W)
-        self.court_surface_label = tk.Label(info_frame, text="Mặt: ")
-        self.court_surface_label.pack(anchor=tk.W)
-        self.court_size_label = tk.Label(info_frame, text="Kích thước: ")
-        self.court_size_label.pack(anchor=tk.W)
-        self.court_price_label = tk.Label(info_frame, text="Giá/h: ")
-        self.court_price_label.pack(anchor=tk.W)
-        self.court_owner_phone_label = tk.Label(info_frame, text="SĐT chủ sân: ")
-        self.court_owner_phone_label.pack(anchor=tk.W)
-        self.court_free_label = tk.Label(info_frame, text="Trạng thái: ", foreground="green")
-        self.court_free_label.pack(anchor=tk.W)
+        self.court_image_label = tk.Label(detail_frame, text="Chọn sân để xem ảnh", bg="#E8F5E9", font=("Segoe UI", 10))
+        self.court_image_label.pack(side='left', padx=5, pady=5)
 
-        tk.Label(right_frame, text="Lịch sân trong ngày:", font=("Arial", 10, "bold")).pack(anchor=tk.W, pady=(10,0))
-        date_frame = tk.Frame(right_frame)
-        date_frame.pack(anchor=tk.W, pady=2)
-        tk.Label(date_frame, text="Ngày (DD/MM/YYYY):").pack(side=tk.LEFT)
-        self.entry_date = tk.Entry(date_frame, width=12)
-        self.entry_date.pack(side=tk.LEFT, padx=5)
+        info_frame = ttk.Frame(detail_frame)
+        info_frame.pack(side='left', fill='both', expand=True, padx=10)
+        self.court_name_label = ttk.Label(info_frame, text="Tên: ", font=("Segoe UI", 12, "bold"))
+        self.court_name_label.pack(anchor='w', pady=2)
+        self.court_address_label = ttk.Label(info_frame, text="Địa chỉ: ")
+        self.court_address_label.pack(anchor='w', pady=2)
+        self.court_surface_label = ttk.Label(info_frame, text="Mặt: ")
+        self.court_surface_label.pack(anchor='w', pady=2)
+        self.court_size_label = ttk.Label(info_frame, text="Kích thước: ")
+        self.court_size_label.pack(anchor='w', pady=2)
+        self.court_price_label = ttk.Label(info_frame, text="Giá/h: ")
+        self.court_price_label.pack(anchor='w', pady=2)
+        self.court_owner_phone_label = ttk.Label(info_frame, text="SĐT chủ sân: ")
+        self.court_owner_phone_label.pack(anchor='w', pady=2)
+        self.court_free_label = ttk.Label(info_frame, text="Trạng thái: ")
+        self.court_free_label.pack(anchor='w', pady=2)
+
+        # Right split for booking
+        booking_pane = ttk.Frame(bottom_frame)
+        booking_pane.pack(side='left', fill='both', expand=True)
+
+        ttk.Label(booking_pane, text="Lịch sân trong ngày:", font=("Segoe UI", 10, "bold")).pack(anchor='w', pady=(5,0))
+        date_frame = ttk.Frame(booking_pane)
+        date_frame.pack(anchor='w', pady=2)
+        ttk.Label(date_frame, text="Ngày (DD/MM/YYYY):").pack(side='left')
+        self.entry_date = ttk.Entry(date_frame, width=12)
+        self.entry_date.pack(side='left', padx=5)
         self.entry_date.insert(0, datetime.datetime.now().strftime("%d/%m/%Y"))
-        tk.Button(date_frame, text="Xem lịch", command=self.load_court_schedule).pack(side=tk.LEFT, padx=5)
+        ttk.Button(date_frame, text="Xem lịch", style="Info.TButton", command=self.load_court_schedule).pack(side='left', padx=5)
 
-        self.schedule_tree = ttk.Treeview(right_frame, columns=("start", "end", "status"), show="headings", height=5)
+        self.schedule_tree = ttk.Treeview(booking_pane, columns=("start", "end", "status"), show="headings", height=3)
         self.schedule_tree.heading("start", text="Bắt đầu")
         self.schedule_tree.heading("end", text="Kết thúc")
         self.schedule_tree.heading("status", text="Trạng thái")
-        self.schedule_tree.pack(fill=tk.X, pady=5)
+        self.schedule_tree.pack(fill='x', pady=5)
 
-        book_frame = tk.LabelFrame(right_frame, text="Đặt sân", padx=5, pady=5)
-        book_frame.pack(fill=tk.X, pady=10)
+        book_frame = ttk.LabelFrame(booking_pane, text="Đặt sân", padding=5)
+        book_frame.pack(fill='x', pady=(5, 20), padx=5)
 
-        tk.Label(book_frame, text="Bắt đầu:").grid(row=0, column=0, sticky=tk.W, padx=5, pady=2)
-        self.start_hour = ttk.Combobox(book_frame, values=[f"{i:02d}" for i in range(24)], width=4)
-        self.start_hour.grid(row=0, column=1, padx=2, pady=2)
+        ttk.Label(book_frame, text="Bắt đầu:").grid(row=0, column=0, sticky='w', padx=2, pady=2)
+        self.start_hour = ttk.Combobox(book_frame, values=[f"{i:02d}" for i in range(24)], width=3)
+        self.start_hour.grid(row=0, column=1, padx=1, pady=2)
         self.start_hour.set("08")
-        tk.Label(book_frame, text=":").grid(row=0, column=2)
-        self.start_minute = ttk.Combobox(book_frame, values=["00", "15", "30", "45"], width=4)
-        self.start_minute.grid(row=0, column=3, padx=2, pady=2)
+        ttk.Label(book_frame, text=":").grid(row=0, column=2)
+        self.start_minute = ttk.Combobox(book_frame, values=["00", "15", "30", "45"], width=3)
+        self.start_minute.grid(row=0, column=3, padx=1, pady=2)
         self.start_minute.set("00")
 
-        tk.Label(book_frame, text="Kết thúc:").grid(row=0, column=4, sticky=tk.W, padx=(15,5), pady=2)
-        self.end_hour = ttk.Combobox(book_frame, values=[f"{i:02d}" for i in range(24)], width=4)
-        self.end_hour.grid(row=0, column=5, padx=2, pady=2)
+        ttk.Label(book_frame, text="Kết thúc:").grid(row=0, column=4, sticky='w', padx=(5,2), pady=2)
+        self.end_hour = ttk.Combobox(book_frame, values=[f"{i:02d}" for i in range(24)], width=3)
+        self.end_hour.grid(row=0, column=5, padx=1, pady=2)
         self.end_hour.set("09")
-        tk.Label(book_frame, text=":").grid(row=0, column=6)
-        self.end_minute = ttk.Combobox(book_frame, values=["00", "15", "30", "45"], width=4)
-        self.end_minute.grid(row=0, column=7, padx=2, pady=2)
+        ttk.Label(book_frame, text=":").grid(row=0, column=6)
+        self.end_minute = ttk.Combobox(book_frame, values=["00", "15", "30", "45"], width=3)
+        self.end_minute.grid(row=0, column=7, padx=1, pady=2)
         self.end_minute.set("00")
 
-        tk.Label(book_frame, text="Chi phí dự kiến:").grid(row=1, column=0, sticky=tk.W, padx=5, pady=5)
-        self.label_cost = tk.Label(book_frame, text="0 VND", foreground="blue", font=("Arial", 10, "bold"))
-        self.label_cost.grid(row=1, column=1, columnspan=3, sticky=tk.W, padx=5)
-        tk.Button(book_frame, text="Tính tiền", command=self.calculate_cost).grid(row=1, column=4, padx=5)
-        tk.Button(book_frame, text="Đặt sân", command=self.book_court, bg="lightgreen").grid(row=1, column=5, columnspan=2, padx=5)
+        ttk.Label(book_frame, text="Chi phí:").grid(row=0, column=8, sticky='w', padx=(10, 2), pady=2)
+        self.label_cost = ttk.Label(book_frame, text="0 VND", style="Cost.TLabel")
+        self.label_cost.grid(row=0, column=9, sticky='w', padx=2)
+
+        ttk.Button(book_frame, text="Tính tiền", style="Warning.TButton", command=self.calculate_cost).grid(row=0, column=10, padx=(10, 5), pady=8)
+        ttk.Button(book_frame, text="Đặt sân", style="Success.TButton", command=self.book_court).grid(row=0, column=11, padx=5, pady=8)
 
     def load_courts(self):
         def fetch():
@@ -308,9 +385,9 @@ class CourtManagerApp:
                 for c in free_res["data"]:
                     if c['court_id'] == cid:
                         if c.get('is_currently_free'):
-                            self.court_free_label.config(text="Trạng thái: Trống", foreground="green")
+                            self.court_free_label.config(text="Trạng thái: Trống", style="StatusFree.TLabel")
                         else:
-                            self.court_free_label.config(text="Trạng thái: Đang có booking", foreground="red")
+                            self.court_free_label.config(text="Trạng thái: Đang có booking", style="StatusBusy.TLabel")
                         break
 
             url = court.get('image_url')
@@ -327,7 +404,7 @@ class CourtManagerApp:
         try:
             resp = requests.get(url, timeout=5)
             img = Image.open(BytesIO(resp.content))
-            img.thumbnail((200, 200))
+            img = img.resize((250, 250))
             photo = ImageTk.PhotoImage(img)
             self.image_cache[cid] = photo
             self.root.after(0, lambda: self.court_image_label.config(image=photo, text=""))
@@ -430,7 +507,7 @@ class CourtManagerApp:
 
     # ================== TAB 2: LỊCH SỬ CỦA TÔI ==================
     def build_my_bookings_tab(self):
-        frame = tk.Frame(self.tab_my_bookings)
+        frame = ttk.Frame(self.tab_my_bookings)
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         self.tree_my_bookings = ttk.Treeview(frame, columns=("id", "court", "start", "end", "status", "cost"), show="headings")
@@ -440,12 +517,20 @@ class CourtManagerApp:
         self.tree_my_bookings.heading("end", text="Kết thúc")
         self.tree_my_bookings.heading("status", text="Trạng thái")
         self.tree_my_bookings.heading("cost", text="Chi phí")
+        
+        self.tree_my_bookings.column("id", width=100)
+        self.tree_my_bookings.column("court", width=200)
+        self.tree_my_bookings.column("start", width=200)
+        self.tree_my_bookings.column("end", width=200)
+        self.tree_my_bookings.column("status", width=150)
+        self.tree_my_bookings.column("cost", width=150)
+        
         self.tree_my_bookings.pack(fill=tk.BOTH, expand=True)
 
-        btn_frame = tk.Frame(frame)
+        btn_frame = ttk.Frame(frame)
         btn_frame.pack(fill=tk.X, pady=5)
-        tk.Button(btn_frame, text="Hủy đặt", command=self.cancel_my_booking).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="Làm mới", command=self.load_my_bookings).pack(side=tk.LEFT)
+        ttk.Button(btn_frame, text="Hủy đặt", style="Danger.TButton", command=self.cancel_my_booking).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Làm mới", style="Info.TButton", command=self.load_my_bookings).pack(side=tk.LEFT)
 
         self.load_my_bookings()
 
@@ -500,56 +585,70 @@ class CourtManagerApp:
         manage_notebook = ttk.Notebook(self.tab_manage)
         manage_notebook.pack(fill=tk.BOTH, expand=True)
 
-        self.tab_manage_courts = tk.Frame(manage_notebook)
+        self.tab_manage_courts = ttk.Frame(manage_notebook)
         manage_notebook.add(self.tab_manage_courts, text="Sân")
         self.build_manage_courts()
 
-        self.tab_manage_bookings = tk.Frame(manage_notebook)
+        self.tab_manage_bookings = ttk.Frame(manage_notebook)
         manage_notebook.add(self.tab_manage_bookings, text="Booking")
         self.build_manage_bookings()
 
     # ---- Quản lý sân ----
     def build_manage_courts(self):
-        frame = tk.Frame(self.tab_manage_courts)
+        frame = ttk.Frame(self.tab_manage_courts)
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        form_frame = tk.LabelFrame(frame, text="Thêm sân mới", padx=10, pady=10)
+        form_frame = ttk.LabelFrame(frame, text="Thêm sân mới", padding=5)
         form_frame.pack(fill=tk.X, pady=5)
 
-        tk.Label(form_frame, text="Tên sân:").grid(row=0, column=0, sticky=tk.W)
-        self.entry_court_name = tk.Entry(form_frame, width=30)
-        self.entry_court_name.grid(row=0, column=1, padx=5, pady=2)
+        # Configure column weights for a neat, responsive grid layout
+        form_frame.columnconfigure(1, weight=1, minsize=150)
+        form_frame.columnconfigure(3, weight=2, minsize=150)
 
-        tk.Label(form_frame, text="Địa chỉ:").grid(row=0, column=2, sticky=tk.W)
-        self.entry_address = tk.Entry(form_frame, width=40)
-        self.entry_address.grid(row=0, column=3, padx=5, pady=2)
+        # Row 0
+        ttk.Label(form_frame, text="Tên sân:").grid(row=0, column=0, sticky='e', padx=(10, 5), pady=8)
+        self.entry_court_name = ttk.Entry(form_frame)
+        self.entry_court_name.grid(row=0, column=1, sticky='ew', padx=5, pady=8)
 
-        tk.Label(form_frame, text="Mặt sân:").grid(row=1, column=0, sticky=tk.W)
-        self.combo_surface = ttk.Combobox(form_frame, values=["PVC", "WOOD", "CEMENT", "SYNTHETIC_RESIN"], width=15)
-        self.combo_surface.grid(row=1, column=1, padx=5, pady=2)
+        ttk.Label(form_frame, text="Địa chỉ:").grid(row=0, column=2, sticky='e', padx=(20, 5), pady=8)
+        self.entry_address = ttk.Entry(form_frame)
+        self.entry_address.grid(row=0, column=3, sticky='ew', padx=5, pady=8)
 
-        tk.Label(form_frame, text="Kích thước:").grid(row=1, column=2, sticky=tk.W)
-        self.combo_size = ttk.Combobox(form_frame, values=["SINGLE", "DOUBLE"], width=15)
-        self.combo_size.grid(row=1, column=3, padx=5, pady=2)
+        # Row 1
+        ttk.Label(form_frame, text="Mặt sân:").grid(row=1, column=0, sticky='e', padx=(10, 5), pady=8)
+        self.combo_surface = ttk.Combobox(form_frame, values=["PVC", "WOOD", "CEMENT", "SYNTHETIC_RESIN"])
+        self.combo_surface.grid(row=1, column=1, sticky='ew', padx=5, pady=8)
 
-        tk.Label(form_frame, text="Giá/h (VND):").grid(row=2, column=0, sticky=tk.W)
-        self.entry_price_hour = tk.Entry(form_frame, width=15)
-        self.entry_price_hour.grid(row=2, column=1, padx=5, pady=2)
+        ttk.Label(form_frame, text="Kích thước:").grid(row=1, column=2, sticky='e', padx=(20, 5), pady=8)
+        self.combo_size = ttk.Combobox(form_frame, values=["SINGLE", "DOUBLE"])
+        self.combo_size.grid(row=1, column=3, sticky='ew', padx=5, pady=8)
 
-        tk.Label(form_frame, text="Giá 3h (VND):").grid(row=2, column=2, sticky=tk.W)
-        self.entry_price_3h = tk.Entry(form_frame, width=15)
-        self.entry_price_3h.grid(row=2, column=3, padx=5, pady=2)
+        # Row 2
+        ttk.Label(form_frame, text="Giá/1h (VND):").grid(row=2, column=0, sticky='e', padx=(10, 5), pady=8)
+        self.entry_price_hour = ttk.Entry(form_frame)
+        self.entry_price_hour.grid(row=2, column=1, sticky='ew', padx=5, pady=8)
 
-        tk.Label(form_frame, text="Ảnh sân:").grid(row=3, column=0, sticky=tk.W)
-        self.entry_image_path = tk.Entry(form_frame, width=25)
-        self.entry_image_path.grid(row=3, column=1, padx=5, pady=2)
-        tk.Button(form_frame, text="Chọn ảnh", command=self.choose_image).grid(row=3, column=2, padx=5)
+        ttk.Label(form_frame, text="Giá/3h (VND):").grid(row=2, column=2, sticky='e', padx=(20, 5), pady=8)
+        self.entry_price_3h = ttk.Entry(form_frame)
+        self.entry_price_3h.grid(row=2, column=3, sticky='ew', padx=5, pady=8)
 
-        btn_frame = tk.Frame(form_frame)
-        btn_frame.grid(row=4, column=0, columnspan=4, pady=10)
-        tk.Button(btn_frame, text="Thêm sân", command=self.add_court, bg="lightblue").pack(side=tk.LEFT, padx=5)
+        # Row 3
+        ttk.Label(form_frame, text="Ảnh sân:").grid(row=3, column=0, sticky='e', padx=(10, 5), pady=8)
+        
+        img_frame = ttk.Frame(form_frame)
+        img_frame.grid(row=3, column=1, columnspan=3, sticky='ew', padx=5, pady=8)
+        img_frame.columnconfigure(0, weight=1)
+        
+        self.entry_image_path = ttk.Entry(img_frame)
+        self.entry_image_path.grid(row=0, column=0, sticky='ew', padx=(0, 5))
+        ttk.Button(img_frame, text="Chọn ảnh", command=self.choose_image).grid(row=0, column=1)
 
-        list_frame = tk.LabelFrame(frame, text="Danh sách sân hiện có", padx=10, pady=10)
+        # Row 4 (Button)
+        btn_frame = ttk.Frame(form_frame)
+        btn_frame.grid(row=4, column=0, columnspan=4, pady=15)
+        ttk.Button(btn_frame, text="Thêm sân", style="Success.TButton", command=self.add_court).pack(side='left', padx=5)
+
+        list_frame = ttk.LabelFrame(frame, text="Danh sách sân hiện có", padding=5)
         list_frame.pack(fill=tk.BOTH, expand=True, pady=10)
 
         self.tree_manage_courts = ttk.Treeview(list_frame, columns=("id", "name", "address", "surface", "size", "price", "active"), show="headings")
@@ -560,12 +659,12 @@ class CourtManagerApp:
         self.tree_manage_courts.heading("size", text="Kích thước")
         self.tree_manage_courts.heading("price", text="Giá/h")
         self.tree_manage_courts.heading("active", text="Hoạt động")
-        self.tree_manage_courts.pack(fill=tk.BOTH, expand=True)
+        btn_manage = ttk.Frame(list_frame)
+        btn_manage.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
+        ttk.Button(btn_manage, text="Xóa (ngừng hoạt động)", style="Danger.TButton", command=self.delete_court).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_manage, text="Làm mới", style="Info.TButton", command=self.load_manage_courts).pack(side=tk.LEFT)
 
-        btn_manage = tk.Frame(list_frame)
-        btn_manage.pack(fill=tk.X, pady=5)
-        tk.Button(btn_manage, text="Xóa (ngừng hoạt động)", command=self.delete_court).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_manage, text="Làm mới", command=self.load_manage_courts).pack(side=tk.LEFT)
+        self.tree_manage_courts.pack(fill=tk.BOTH, expand=True)
 
         self.load_manage_courts()
 
@@ -645,16 +744,16 @@ class CourtManagerApp:
 
     # ---- Quản lý booking ----
     def build_manage_bookings(self):
-        frame = tk.Frame(self.tab_manage_bookings)
+        frame = ttk.Frame(self.tab_manage_bookings)
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        filter_frame = tk.Frame(frame)
+        filter_frame = ttk.Frame(frame)
         filter_frame.pack(fill=tk.X, pady=5)
-        tk.Label(filter_frame, text="Trạng thái:").pack(side=tk.LEFT)
+        ttk.Label(filter_frame, text="Trạng thái:").pack(side=tk.LEFT)
         self.filter_booking_status = ttk.Combobox(filter_frame, values=["", "PENDING", "BOOKED", "COMPLETED", "CANCELLED", "REJECTED"], width=12)
         self.filter_booking_status.pack(side=tk.LEFT, padx=5)
-        tk.Button(filter_frame, text="Lọc", command=self.load_manage_bookings).pack(side=tk.LEFT, padx=5)
-        tk.Button(filter_frame, text="Làm mới", command=self.load_manage_bookings).pack(side=tk.LEFT)
+        ttk.Button(filter_frame, text="Lọc", style="Info.TButton", command=self.load_manage_bookings).pack(side=tk.LEFT, padx=5)
+        ttk.Button(filter_frame, text="Làm mới", style="Info.TButton", command=self.load_manage_bookings).pack(side=tk.LEFT)
 
         self.tree_manage_bookings = ttk.Treeview(frame, columns=("id", "user", "court", "start", "end", "status", "cost"), show="headings")
         self.tree_manage_bookings.heading("id", text="ID")
@@ -664,14 +763,23 @@ class CourtManagerApp:
         self.tree_manage_bookings.heading("end", text="Kết thúc")
         self.tree_manage_bookings.heading("status", text="Trạng thái")
         self.tree_manage_bookings.heading("cost", text="Chi phí")
+        
+        self.tree_manage_bookings.column("id", width=100)
+        self.tree_manage_bookings.column("user", width=150)
+        self.tree_manage_bookings.column("court", width=150)
+        self.tree_manage_bookings.column("start", width=180)
+        self.tree_manage_bookings.column("end", width=180)
+        self.tree_manage_bookings.column("status", width=150)
+        self.tree_manage_bookings.column("cost", width=120)
+        
         self.tree_manage_bookings.pack(fill=tk.BOTH, expand=True)
 
-        action_frame = tk.Frame(frame)
+        action_frame = ttk.Frame(frame)
         action_frame.pack(fill=tk.X, pady=5)
-        tk.Button(action_frame, text="Duyệt", command=self.approve_booking).pack(side=tk.LEFT, padx=5)
-        tk.Button(action_frame, text="Từ chối", command=self.reject_booking).pack(side=tk.LEFT, padx=5)
-        tk.Button(action_frame, text="Hoàn thành", command=self.complete_booking).pack(side=tk.LEFT, padx=5)
-        tk.Button(action_frame, text="Hủy", command=self.cancel_booking_admin).pack(side=tk.LEFT, padx=5)
+        ttk.Button(action_frame, text="Duyệt", style="Success.TButton", command=self.approve_booking).pack(side=tk.LEFT, padx=5)
+        ttk.Button(action_frame, text="Từ chối", style="Danger.TButton", command=self.reject_booking).pack(side=tk.LEFT, padx=5)
+        ttk.Button(action_frame, text="Hoàn thành", command=self.complete_booking).pack(side=tk.LEFT, padx=5)
+        ttk.Button(action_frame, text="Hủy", style="Danger.TButton", command=self.cancel_booking_admin).pack(side=tk.LEFT, padx=5)
 
         self.load_manage_bookings()
 
@@ -776,16 +884,16 @@ class CourtManagerApp:
 
     # ================== TAB 4: THỐNG KÊ ==================
     def build_stats_tab(self):
-        frame = tk.Frame(self.tab_stats)
+        frame = ttk.Frame(self.tab_stats)
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        tk.Label(frame, text="DOANH THU THEO NGÀY", font=("Arial", 12, "bold")).pack(anchor=tk.W)
+        ttk.Label(frame, text="DOANH THU THEO NGÀY", font=("Segoe UI", 12, "bold")).pack(anchor=tk.W)
         self.tree_stats_revenue = ttk.Treeview(frame, columns=("date", "revenue"), show="headings", height=6)
         self.tree_stats_revenue.heading("date", text="Ngày")
         self.tree_stats_revenue.heading("revenue", text="Doanh thu (VND)")
         self.tree_stats_revenue.pack(fill=tk.X, pady=5)
 
-        tk.Label(frame, text="TOP SÂN ĐƯỢC ĐẶT NHIỀU NHẤT", font=("Arial", 12, "bold")).pack(anchor=tk.W, pady=(10,0))
+        ttk.Label(frame, text="TOP SÂN ĐƯỢC ĐẶT NHIỀU NHẤT", font=("Segoe UI", 12, "bold")).pack(anchor=tk.W, pady=(10,0))
         self.tree_stats_top = ttk.Treeview(frame, columns=("court", "address", "owner_phone", "count"), show="headings", height=6)
         self.tree_stats_top.heading("court", text="Tên sân")
         self.tree_stats_top.heading("address", text="Địa chỉ")
@@ -793,9 +901,9 @@ class CourtManagerApp:
         self.tree_stats_top.heading("count", text="Số lần đặt")
         self.tree_stats_top.pack(fill=tk.X, pady=5)
 
-        btn_stats = tk.Frame(frame)
+        btn_stats = ttk.Frame(frame)
         btn_stats.pack(fill=tk.X, pady=10)
-        tk.Button(btn_stats, text="Làm mới", command=self.load_stats).pack(side=tk.LEFT)
+        ttk.Button(btn_stats, text="Làm mới", style="Info.TButton", command=self.load_stats).pack(side=tk.LEFT)
 
         self.load_stats()
 
@@ -829,7 +937,7 @@ class CourtManagerApp:
 
     # ================== TAB 5: THÔNG BÁO ==================
     def build_notifications_tab(self):
-        frame = tk.Frame(self.tab_notifications)
+        frame = ttk.Frame(self.tab_notifications)
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
         self.tree_notifications = ttk.Treeview(frame, columns=("id", "title", "content", "created", "read"), show="headings")
@@ -845,10 +953,10 @@ class CourtManagerApp:
         self.tree_notifications.column("read", width=80)
         self.tree_notifications.pack(fill=tk.BOTH, expand=True)
 
-        btn_frame = tk.Frame(frame)
+        btn_frame = ttk.Frame(frame)
         btn_frame.pack(fill=tk.X, pady=5)
-        tk.Button(btn_frame, text="Làm mới", command=self.load_notifications).pack(side=tk.LEFT, padx=5)
-        tk.Button(btn_frame, text="Đánh dấu đã đọc", command=self.mark_read).pack(side=tk.LEFT)
+        ttk.Button(btn_frame, text="Làm mới", style="Info.TButton", command=self.load_notifications).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Đánh dấu đã đọc", command=self.mark_read).pack(side=tk.LEFT)
 
         self.load_notifications()
 
@@ -897,8 +1005,8 @@ class CourtManagerApp:
     # ================== LOGOUT ==================
     def logout(self):
         self.main_frame.destroy()
-        self.login_frame = tk.Frame(self.root)
-        self.login_frame.pack(fill=tk.BOTH, expand=True)
+        self.login_frame = ttk.Frame(self.root)
+        self.login_frame.pack(fill=tk.BOTH, expand=True, padx=20, pady=20)
         self.build_login_frame()
 
 if __name__ == "__main__":
