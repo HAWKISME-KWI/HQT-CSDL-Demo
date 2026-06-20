@@ -6,6 +6,7 @@
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/download/)
 [![Git](https://img.shields.io/badge/Git-2.0+-F05032?logo=git&logoColor=white)](https://git-scm.com/downloads)
 [![Release](https://img.shields.io/badge/Release-v1.0.0-success)](https://github.com/HAWKISME-KWI/HQT-CSDL-Demo/releases)
+[![GitHub Stars](https://img.shields.io/github/stars/HAWKISME-KWI/HQT-CSDL-Demo?style=social)](https://github.com/HAWKISME-KWI/HQT-CSDL-Demo/stargazers)
 
 Database Management System Course Project
 A badminton court booking and management system developed using **Python 3.12** and **PostgreSQL**.
