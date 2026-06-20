@@ -1,4 +1,8 @@
 # Badminton Court Management System
+[![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)](https://www.python.org/downloads/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue?logo=postgresql&logoColor=white)](https://www.postgresql.org/download/)
+[![Git](https://img.shields.io/badge/Git-Required-orange?logo=git&logoColor=white)](https://git-scm.com/downloads)
+[![License](https://img.shields.io/badge/License-Educational-green)]()
 
 A badminton court booking and management system developed using **Python 3.12** and **PostgreSQL**.
 
