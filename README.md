@@ -73,6 +73,8 @@ HQT-CSDL-Demo/
 │
 ├── src/
 │   ├── main.py
+|   ├──  test
+|       ├── attack_double_booking.py
 │   └──  services/
 |       ├── db_services.sql
 │
@@ -102,6 +104,19 @@ HQT-CSDL-Demo/
 * Triggers
 * Reporting and Statistics
 ---
+---
+## Some Bug On Annomally Transaction
+### Lost Updated
+To exploit this bug:
+```bash
+cd test
+py attack_double_booking.py
+```
+Then you will see your booking with the booking uid is rejected, which must be booked!
+### Phantom Read
+This one you can see if you check the court and some one have booked that court in the time you see, when you refresh or click into the "Loc" button, you will see the new row
+### Non-Repeatable Read
+This can be see while y check the court price, when another change the court price then you will the this!
 ## Technologies Used
 * Python 3.12
 * PostgreSQL
