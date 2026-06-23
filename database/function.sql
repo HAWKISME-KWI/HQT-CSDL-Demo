@@ -305,7 +305,7 @@ BEGIN
             RAISE EXCEPTION 'You are not the owner of this court';
         END IF;
     END IF;
-    UPDATE bookings SET status = 'REJECTED' WHERE booking_id = p_booking_id AND status = 'PENDING';
+    UPDATE bookings SET status = 'REJECTED' WHERE booking_id = p_booking_id; --AND status = 'PENDING';
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Booking not found or not pending';
     END IF;

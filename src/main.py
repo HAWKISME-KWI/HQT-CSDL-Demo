@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from PIL import Image, ImageTk
@@ -28,7 +27,7 @@ class CourtManagerApp:
         self.root.title("Quản lý Sân cầu lông")
         self.root.geometry("1400x800")
         
-                        # --- UI Styling Setup ---
+        # --- UI Styling Setup ---
         style = ttk.Style()
         style.theme_use('clam')
         
@@ -209,8 +208,6 @@ class CourtManagerApp:
             self.tab_stats = ttk.Frame(self.notebook)
             self.notebook.add(self.tab_stats, text="📊 Thống kê")
             self.build_stats_tab()
-
-
 
         self.load_courts()
 
@@ -593,17 +590,22 @@ class CourtManagerApp:
         manage_notebook.add(self.tab_manage_bookings, text="Booking")
         self.build_manage_bookings()
 
-    # ---- Quản lý sân ----
+    # ---- Quản lý sân (có thêm chức năng cập nhật) ----
     def build_manage_courts(self):
+        # Khởi tạo biến cho chế độ cập nhật
+        self.editing_court_id = None
+        self.current_image_url = None
+
         frame = ttk.Frame(self.tab_manage_courts)
         frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        form_frame = ttk.LabelFrame(frame, text="Thêm sân mới", padding=5)
+        # Form thêm / cập nhật sân
+        form_frame = ttk.LabelFrame(frame, text="Thêm / Cập nhật sân", padding=5)
         form_frame.pack(fill=tk.X, pady=5)
 
-        # Configure column weights for a neat, responsive grid layout
+        # Cấu hình grid
         form_frame.columnconfigure(1, weight=1, minsize=150)
-        form_frame.columnconfigure(3, weight=2, minsize=150)
+        form_frame.columnconfigure(3, weight=1, minsize=150)
 
         # Row 0
         ttk.Label(form_frame, text="Tên sân:").grid(row=0, column=0, sticky='e', padx=(10, 5), pady=8)
@@ -632,25 +634,42 @@ class CourtManagerApp:
         self.entry_price_3h = ttk.Entry(form_frame)
         self.entry_price_3h.grid(row=2, column=3, sticky='ew', padx=5, pady=8)
 
-        # Row 3
+        # Row 3: Ảnh
         ttk.Label(form_frame, text="Ảnh sân:").grid(row=3, column=0, sticky='e', padx=(10, 5), pady=8)
-        
         img_frame = ttk.Frame(form_frame)
         img_frame.grid(row=3, column=1, columnspan=3, sticky='ew', padx=5, pady=8)
         img_frame.columnconfigure(0, weight=1)
-        
+
         self.entry_image_path = ttk.Entry(img_frame)
         self.entry_image_path.grid(row=0, column=0, sticky='ew', padx=(0, 5))
         ttk.Button(img_frame, text="Chọn ảnh", command=self.choose_image).grid(row=0, column=1)
 
-        # Row 4 (Button)
-        btn_frame = ttk.Frame(form_frame)
-        btn_frame.grid(row=4, column=0, columnspan=4, pady=15)
-        ttk.Button(btn_frame, text="Thêm sân", style="Success.TButton", command=self.add_court).pack(side='left', padx=5)
+        # Row 4: Trạng thái hoạt động
+        ttk.Label(form_frame, text="Trạng thái:").grid(row=4, column=0, sticky='e', padx=(10, 5), pady=8)
+        self.combo_active = ttk.Combobox(form_frame, values=["Đang hoạt động", "Ngừng hoạt động"], state="readonly")
+        self.combo_active.grid(row=4, column=1, sticky='w', padx=5, pady=8)
+        self.combo_active.set("Đang hoạt động")
 
+        # Row 5: Các nút chức năng
+        btn_frame = ttk.Frame(form_frame)
+        btn_frame.grid(row=5, column=0, columnspan=4, pady=15)
+
+        self.btn_add = ttk.Button(btn_frame, text="Thêm sân", style="Success.TButton", command=self.add_court)
+        self.btn_add.pack(side='left', padx=5)
+
+        self.btn_update = ttk.Button(btn_frame, text="Cập nhật", style="Warning.TButton", command=self.update_court)
+        self.btn_update.pack(side='left', padx=5)
+        self.btn_update.config(state='disabled')  # Ban đầu vô hiệu
+
+        self.btn_cancel = ttk.Button(btn_frame, text="Hủy", style="Danger.TButton", command=self.cancel_edit)
+        self.btn_cancel.pack(side='left', padx=5)
+        self.btn_cancel.config(state='disabled')
+
+        # Danh sách sân
         list_frame = ttk.LabelFrame(frame, text="Danh sách sân hiện có", padding=5)
         list_frame.pack(fill=tk.BOTH, expand=True, pady=10)
 
+        # Tạo Treeview với cột "Hoạt động" để hiển thị trạng thái
         self.tree_manage_courts = ttk.Treeview(list_frame, columns=("id", "name", "address", "surface", "size", "price", "active"), show="headings")
         self.tree_manage_courts.heading("id", text="ID")
         self.tree_manage_courts.heading("name", text="Tên")
@@ -659,13 +678,30 @@ class CourtManagerApp:
         self.tree_manage_courts.heading("size", text="Kích thước")
         self.tree_manage_courts.heading("price", text="Giá/h")
         self.tree_manage_courts.heading("active", text="Hoạt động")
+        self.tree_manage_courts.column("id", width=80)
+        self.tree_manage_courts.column("name", width=150)
+        self.tree_manage_courts.column("address", width=200)
+        self.tree_manage_courts.column("surface", width=100)
+        self.tree_manage_courts.column("size", width=100)
+        self.tree_manage_courts.column("price", width=100)
+        self.tree_manage_courts.column("active", width=100)
+
+        # Thanh cuộn
+        scroll_y = ttk.Scrollbar(list_frame, orient='vertical', command=self.tree_manage_courts.yview)
+        self.tree_manage_courts.configure(yscrollcommand=scroll_y.set)
+        self.tree_manage_courts.pack(side='left', fill=tk.BOTH, expand=True)
+        scroll_y.pack(side='right', fill='y')
+
+        # Sự kiện chọn dòng để load dữ liệu lên form
+        self.tree_manage_courts.bind("<<TreeviewSelect>>", self.on_manage_court_selected)
+
+        # Nút chức năng cho danh sách
         btn_manage = ttk.Frame(list_frame)
         btn_manage.pack(side=tk.BOTTOM, fill=tk.X, pady=5)
         ttk.Button(btn_manage, text="Xóa (ngừng hoạt động)", style="Danger.TButton", command=self.delete_court).pack(side=tk.LEFT, padx=5)
         ttk.Button(btn_manage, text="Làm mới", style="Info.TButton", command=self.load_manage_courts).pack(side=tk.LEFT)
 
-        self.tree_manage_courts.pack(fill=tk.BOTH, expand=True)
-
+        # Tải danh sách sân
         self.load_manage_courts()
 
     def choose_image(self):
@@ -685,6 +721,9 @@ class CourtManagerApp:
             self.tree_manage_courts.delete(item)
         if "data" in result:
             for c in result["data"]:
+                # Lấy trạng thái active từ cột is_active (nếu có)
+                is_active = c.get('is_active', True)
+                active_text = "Có" if is_active else "Không"
                 self.tree_manage_courts.insert("", tk.END, values=(
                     str(c['court_id'])[:8],
                     c['court_name'],
@@ -692,10 +731,87 @@ class CourtManagerApp:
                     c['surface'],
                     c['size'],
                     c['price_per_hour'],
-                    "Có" if c.get('is_currently_free') is not None else "N/A"
+                    active_text
                 ))
+                # Lưu court_id vào map
+                self.court_id_map[str(c['court_id'])[:8]] = c['court_id']
+
+    def on_manage_court_selected(self, event):
+        """Khi chọn một sân trong danh sách quản lý, load dữ liệu lên form để cập nhật"""
+        sel = self.tree_manage_courts.selection()
+        if not sel:
+            return
+        short_id = self.tree_manage_courts.item(sel[0])['values'][0]
+        court_id = self.court_id_map.get(short_id)
+        if not court_id:
+            return
+        self.load_court_to_form(court_id)
+
+    def load_court_to_form(self, court_id):
+        """Lấy thông tin sân từ DB và điền vào form, kích hoạt chế độ cập nhật"""
+        res = db_service.get_court_by_id(court_id)
+        if "error" in res:
+            messagebox.showerror("Lỗi", res["error"])
+            return
+        court = res["data"]
+        self.editing_court_id = court_id
+        self.current_image_url = court.get('image_url')
+
+        # Điền dữ liệu vào form
+        self.entry_court_name.delete(0, tk.END)
+        self.entry_court_name.insert(0, court['court_name'])
+        self.entry_address.delete(0, tk.END)
+        self.entry_address.insert(0, court.get('address', ''))
+        self.combo_surface.set(court['court_surfaces_type'])
+        self.combo_size.set(court['court_sizes_type'])
+        self.entry_price_hour.delete(0, tk.END)
+        self.entry_price_hour.insert(0, str(court['price_per_hour']))
+        self.entry_price_3h.delete(0, tk.END)
+        self.entry_price_3h.insert(0, str(court.get('price_per_three_hours', 0)))
+        # Trạng thái hoạt động
+        is_active = court.get('is_active', True)
+        self.combo_active.set("Đang hoạt động" if is_active else "Ngừng hoạt động")
+        # Xóa đường dẫn ảnh cũ (không hiển thị)
+        self.entry_image_path.delete(0, tk.END)
+
+        # Chuyển sang chế độ cập nhật
+        self.btn_add.config(state='disabled')
+        self.btn_update.config(state='normal')
+        self.btn_cancel.config(state='normal')
+        # Đổi tiêu đề form
+        self.btn_add.master.nametowidget(self.btn_add.master.winfo_parent()).config(text="Cập nhật sân")  # Thay đổi tiêu đề LabelFrame (không được)
+        # Cách đơn giản: thay đổi text của LabelFrame
+        for child in self.tab_manage_courts.winfo_children():
+            if isinstance(child, ttk.LabelFrame) and child.cget("text") == "Thêm / Cập nhật sân":
+                child.config(text="Cập nhật sân")
+                break
+
+    def cancel_edit(self):
+        """Hủy chế độ cập nhật, reset form"""
+        self.editing_court_id = None
+        self.current_image_url = None
+        self.clear_form()
+        self.btn_add.config(state='normal')
+        self.btn_update.config(state='disabled')
+        self.btn_cancel.config(state='disabled')
+        for child in self.tab_manage_courts.winfo_children():
+            if isinstance(child, ttk.LabelFrame) and child.cget("text") == "Cập nhật sân":
+                child.config(text="Thêm / Cập nhật sân")
+                break
+
+    def clear_form(self):
+        """Xóa dữ liệu trên form"""
+        self.entry_court_name.delete(0, tk.END)
+        self.entry_address.delete(0, tk.END)
+        self.combo_surface.set('')
+        self.combo_size.set('')
+        self.entry_price_hour.delete(0, tk.END)
+        self.entry_price_3h.delete(0, tk.END)
+        self.entry_image_path.delete(0, tk.END)
+        self.combo_active.set("Đang hoạt động")
 
     def add_court(self):
+        """Thêm sân mới (chỉ hoạt động khi không ở chế độ cập nhật)"""
         name = self.entry_court_name.get().strip()
         address = self.entry_address.get().strip()
         surface = self.combo_surface.get()
@@ -719,6 +835,63 @@ class CourtManagerApp:
             messagebox.showerror("Lỗi", res["error"])
         else:
             messagebox.showinfo("Thành công", "Thêm sân thành công!")
+            self.clear_form()
+            self.load_manage_courts()
+            self.load_courts()
+
+    def update_court(self):
+        """Cập nhật thông tin sân đang được chọn"""
+        if not self.editing_court_id:
+            messagebox.showerror("Lỗi", "Không có sân nào đang được chọn để cập nhật")
+            return
+
+        court_id = self.editing_court_id
+        name = self.entry_court_name.get().strip()
+        address = self.entry_address.get().strip()
+        surface = self.combo_surface.get()
+        size = self.combo_size.get()
+        price_hour = self.entry_price_hour.get().strip()
+        price_3h = self.entry_price_3h.get().strip()
+        image_path = self.entry_image_path.get().strip()
+        is_active = (self.combo_active.get() == "Đang hoạt động")
+
+        if not name or not address or not surface or not size or not price_hour or not price_3h:
+            messagebox.showerror("Lỗi", "Vui lòng điền đầy đủ thông tin")
+            return
+        try:
+            price_hour = float(price_hour)
+            price_3h = float(price_3h)
+        except:
+            messagebox.showerror("Lỗi", "Giá phải là số")
+            return
+
+        # Xử lý ảnh: nếu có đường dẫn ảnh mới thì upload, ngược lại giữ nguyên
+        new_image_url = None
+        if image_path:
+            upload_res = db_service.upload_court_image(image_path, court_id)
+            if "error" in upload_res:
+                messagebox.showerror("Lỗi", f"Không thể upload ảnh: {upload_res['error']}")
+                return
+            new_image_url = upload_res["url"]
+
+        # Gọi hàm cập nhật
+        res = db_service.update_court(
+            court_id=court_id,
+            court_name=name,
+            address=address,
+            surface=surface,
+            size=size,
+            price_hour=price_hour,
+            price_3h=price_3h,
+            is_active=is_active,
+            image_url=new_image_url,  # None nếu không thay đổi ảnh
+            admin_id=self.current_user['user_id']
+        )
+        if "error" in res:
+            messagebox.showerror("Lỗi", res["error"])
+        else:
+            messagebox.showinfo("Thành công", "Cập nhật sân thành công!")
+            self.cancel_edit()  # Reset form và thoát chế độ cập nhật
             self.load_manage_courts()
             self.load_courts()
 
@@ -934,73 +1107,6 @@ class CourtManagerApp:
                     row['owner_phone'],
                     row['total_bookings']
                 ))
-
-    # ================== TAB 5: THÔNG BÁO ==================
-    def build_notifications_tab(self):
-        frame = ttk.Frame(self.tab_notifications)
-        frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
-
-        self.tree_notifications = ttk.Treeview(frame, columns=("id", "title", "content", "created", "read"), show="headings")
-        self.tree_notifications.heading("id", text="ID")
-        self.tree_notifications.heading("title", text="Tiêu đề")
-        self.tree_notifications.heading("content", text="Nội dung")
-        self.tree_notifications.heading("created", text="Thời gian")
-        self.tree_notifications.heading("read", text="Đã đọc")
-        self.tree_notifications.column("id", width=80)
-        self.tree_notifications.column("title", width=150)
-        self.tree_notifications.column("content", width=300)
-        self.tree_notifications.column("created", width=150)
-        self.tree_notifications.column("read", width=80)
-        self.tree_notifications.pack(fill=tk.BOTH, expand=True)
-
-        btn_frame = ttk.Frame(frame)
-        btn_frame.pack(fill=tk.X, pady=5)
-        ttk.Button(btn_frame, text="Làm mới", style="Info.TButton", command=self.load_notifications).pack(side=tk.LEFT, padx=5)
-        ttk.Button(btn_frame, text="Đánh dấu đã đọc", command=self.mark_read).pack(side=tk.LEFT)
-
-        self.load_notifications()
-
-    def load_notifications(self):
-        def fetch():
-            res = db_service.get_notifications(self.current_user['user_id'])
-            if "error" in res:
-                self.root.after(0, lambda: messagebox.showerror("Lỗi", res["error"]))
-            else:
-                self.root.after(0, self.update_notifications, res)
-        threading.Thread(target=fetch, daemon=True).start()
-
-    def update_notifications(self, result):
-        for item in self.tree_notifications.get_children():
-            self.tree_notifications.delete(item)
-        if "data" in result:
-            for row in result["data"]:
-                nid = row['notification_id']
-                short_id = str(nid)[:8]
-                self.notification_id_map[short_id] = nid
-                self.tree_notifications.insert("", tk.END, values=(
-                    short_id,
-                    row['title'],
-                    row['content'],
-                    format_datetime(row['created_at']),
-                    "Đã đọc" if row['is_read'] else "Chưa đọc"
-                ))
-
-    def mark_read(self):
-        sel = self.tree_notifications.selection()
-        if not sel:
-            messagebox.showinfo("Thông báo", "Chọn thông báo cần đánh dấu đã đọc")
-            return
-        short_id = self.tree_notifications.item(sel[0])['values'][0]
-        nid = self.notification_id_map.get(short_id)
-        if not nid:
-            messagebox.showerror("Lỗi", "Không tìm thấy thông báo")
-            return
-        res = db_service.mark_notification_read(nid)
-        if "error" in res:
-            messagebox.showerror("Lỗi", res["error"])
-        else:
-            messagebox.showinfo("Thành công", "Đã đánh dấu đã đọc")
-            self.load_notifications()
 
     # ================== LOGOUT ==================
     def logout(self):
